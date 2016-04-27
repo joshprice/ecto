@@ -135,9 +135,11 @@ defmodule Ecto.Adapters.Postgres do
     task = Task.Supervisor.async_nolink(pid, fn ->
       {:ok, conn} = Postgrex.start_link(opts)
 
-      value = Ecto.Adapters.Postgres.Connection.execute(conn, sql, [], opts)
-      GenServer.stop(conn)
-      value
+      try do
+        Ecto.Adapters.Postgres.Connection.execute(conn, sql, [], opts)
+      after
+        GenServer.stop(conn)
+      end
     end)
 
     timeout = Keyword.get(opts, :timeout, 15_000)
@@ -146,6 +148,9 @@ defmodule Ecto.Adapters.Postgres do
       {:ok, {:ok, _}} ->
         :ok
       {:ok, {:error, error}} ->
+        {:error, error}
+      {:exit, {:shutdown, %{__struct__: struct} = error}}
+          when struct in [Postgrex.Error, DBConnection.Error] ->
         {:error, error}
       {:exit, {%{__struct__: struct} = error, _}}
           when struct in [Postgrex.Error, DBConnection.Error] ->

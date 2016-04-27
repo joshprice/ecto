@@ -38,9 +38,11 @@ defmodule Ecto.Mixfile do
     [{:poolboy, "~> 1.5"},
      {:decimal, "~> 1.0"},
 
+     {:db_connection, "~> 0.2", github: "fishcakez/db_connection", override: true},
+
      # Drivers
      {:mariaex, "~> 0.7.1", optional: true},
-     {:postgrex, "~> 0.11.1", optional: true},
+     {:postgrex, "~> 0.11.1", optional: true, github: "fishcakez/postgrex", branch: "jf-db_conn-1_0"},
 
      # Optional
      {:sbroker, "~> 0.7", optional: true},

@@ -14,7 +14,7 @@ defmodule Simple.Mixfile do
   end
 
   defp deps do
-    [{:postgrex, ">= 0.0.0"},
+    [{:postgrex, "~> 0.11.1", optional: true, github: "fishcakez/postgrex", branch: "jf-db_conn-1_0"},
      {:ecto, path: "../.."}]
   end
 

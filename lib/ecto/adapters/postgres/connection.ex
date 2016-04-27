@@ -73,16 +73,33 @@ if Code.ensure_loaded?(Postgrex) do
 
     def prepare_execute(conn, name, sql, params, opts) do
       query = %Postgrex.Query{name: name, statement: sql}
-      DBConnection.prepare_execute(conn, query, map_params(params), opts)
+      case DBConnection.prepare_execute(conn, query, map_params(params), opts) do
+        {:error, %ArgumentError{} = err} ->
+          raise err
+        other ->
+          other
+      end
     end
 
     def execute(conn, sql, params, opts) when is_binary(sql) do
       query = %Postgrex.Query{name: "", statement: sql}
-      DBConnection.query(conn, query, map_params(params), opts)
+      case DBConnection.prepare_execute(conn, query, map_params(params), opts) do
+        {:ok, _, res} ->
+          {:ok, res}
+        {:error, %ArgumentError{} = err} ->
+          raise err
+        {:error, _} = error ->
+          error
+      end
     end
 
     def execute(conn, %{} = query, params, opts) do
-      DBConnection.execute(conn, query, map_params(params), opts)
+      case DBConnection.execute(conn, query, map_params(params), opts) do
+        {:error, %ArgumentError{} = err} ->
+          raise err
+        other ->
+          other
+      end
     end
 
     defp map_params(params) do
