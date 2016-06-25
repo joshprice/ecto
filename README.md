@@ -3,11 +3,9 @@
 [![Build Status](https://travis-ci.org/elixir-ecto/ecto.svg?branch=master)](https://travis-ci.org/elixir-ecto/ecto)
 [![Inline docs](http://inch-ci.org/github/elixir-ecto/ecto.svg?branch=master&style=flat)](http://inch-ci.org/github/elixir-ecto/ecto)
 
-Ecto is a domain specific language for writing queries and interacting with databases in Elixir.
+Ecto is a domain specific language for writing queries and interacting with databases in Elixir. It provides a standardised API for talking to different databases. It is a Language Integrated Query or [LINQ](https://en.wikipedia.org/wiki/Language_Integrated_Query). 
 
-Ecto provides a standardised API for talking to different databases. It is a Language Integrated Query or [LINQ](https://en.wikipedia.org/wiki/Language_Integrated_Query). 
-
-Here is an example an Ecto schema definition:
+An example an Ecto schema definition:
 
 ```elixir
 defmodule Sample.Weather do
@@ -22,24 +20,105 @@ defmodule Sample.Weather do
 end
 ```
 
-Here are some examples of different style of queries for the above schema:
+Some examples of different query styles for the above schema:
 
 ```elixir
-    query = from w in Weather,
-         where: w.prcp > 0 or is_nil(w.prcp),
-         select: w
-    Repo.all(query)
+query = from w in Weather,
+        where: w.prcp > 0 or is_nil(w.prcp),
+        select: w
+Repo.all(query)
 ```
 
 ```elixir
-    Weather
-    |> where(city: "Kraków")
-    |> order_by(:temp_lo)
-    |> limit(10)
-    |> Repo.all
+Weather
+|> where(city: "Kraków")
+|> order_by(:temp_lo)
+|> limit(10)
+|> Repo.all
 ```
 
-See the [online documentation](http://hexdocs.pm/ecto) or [run the sample application](https://github.com/elixir-ecto/ecto/tree/master/examples/simple) for more information.
+## Documentation
+
+* See the [online documentation](http://hexdocs.pm/ecto)
+* [Run the sample application](https://github.com/elixir-ecto/ecto/tree/master/examples/simple)
+* [Getting Started with Ecto Basics Guide](https://github.com/elixir-ecto/ecto/wiki/Ecto-Basics)
+
+## Installation
+
+This example assumes you're using PostgreSQL. If you want to use another database, just choose the proper dependency from the table in [Usage](#usage).
+
+Add the following deps to your `mix.exs` file:
+
+```elixir
+defp deps do
+  [{:postgrex, ">= 0.0.0"},
+   {:ecto, "~> 2.0.1"}]
+end
+```
+
+and update your applications list to include both projects:
+
+```elixir
+def application do
+  [applications: [:postgrex, :ecto]]
+end
+```
+
+Fetch the dependencies:
+
+    mix deps.get
+
+Configure the Ecto Repos for your application in `config/config.exs`:
+
+```elixir
+config :my_app, ecto_repos: [MyApp.Repo]
+```
+
+Then you can generate your Repo module like so:
+  
+    mix ecto.gen.repo
+
+This will generate a Repo module and add appropriate configuration to `config/config.exs`. Adjust the `username` and `password` to match your PostgreSQL instance.
+
+Now add a file `lib/my_app/app.ex`:
+
+```elixir
+# Taken from https://github.com/elixir-ecto/ecto/blob/master/examples/simple/lib/simple.ex#L1-L10
+# Suspect this could be simpler...
+#
+# The `mix ecto.gen.repo` task suggests:
+#
+# Don't forget to add your new repo to your supervision tree
+# (typically in lib/ecto2test.ex):
+#
+#    supervisor(Ecto2Test.Repo, [])
+#
+defmodule MyApp.App do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec
+    tree = [supervisor(MyApp.Repo, [])]
+    opts = [name: MyApp.Sup, strategy: :one_for_one]
+    Supervisor.start_link(tree, opts)
+  end
+end
+```
+
+Add a Schema
+
+```elixir
+defmodule MyApp.User do
+  use Ecto.Schema
+
+  schema "user" do
+    field :name
+    field :email
+  end
+end
+```
+
+* insert more steps from https://gist.github.com/joshprice/c9e46ecd31cbe2d1a180160b1fe0128b#model-related
 
 ## Usage
 
@@ -58,33 +137,6 @@ MongoDB    | Mongo.Ecto             | [mongodb_ecto][mongodb_ecto] | No
 [tds_ecto]: https://github.com/livehelpnow/tds_ecto
 [sqlite_ecto]: https://github.com/jazzyb/sqlite_ecto
 [mongodb_ecto]: https://github.com/michalmuskala/mongodb_ecto
-
-For example, if you want to use PostgreSQL, add to your `mix.exs` file:
-
-```elixir
-defp deps do
-  [{:postgrex, ">= 0.0.0"},
-   {:ecto, "~> 2.0.0"}]
-end
-```
-
-and update your applications list to include both projects:
-
-```elixir
-def application do
-  [applications: [:postgrex, :ecto]]
-end
-```
-
-Then run `mix deps.get` in your shell to fetch the dependencies. If you want to use another database, just choose the proper dependency from the table above.
-
-Finally, in the repository configuration, you will need to specify the `adapter:` respective to the chosen dependency. For PostgreSQL it is:
-
-```elixir
-config :my_app, Repo,
-  adapter: Ecto.Adapters.Postgres,
-  ...
-```
 
 We are currently looking for contributions to add support for other SQL databases and folks interested in exploring non-relational databases too.
 
