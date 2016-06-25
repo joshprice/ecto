@@ -3,24 +3,13 @@
 [![Build Status](https://travis-ci.org/elixir-ecto/ecto.svg?branch=master)](https://travis-ci.org/elixir-ecto/ecto)
 [![Inline docs](http://inch-ci.org/github/elixir-ecto/ecto.svg?branch=master&style=flat)](http://inch-ci.org/github/elixir-ecto/ecto)
 
-Ecto is a domain specific language for writing queries and interacting with databases in Elixir. Here is an example:
+Ecto is a domain specific language for writing queries and interacting with databases in Elixir.
+
+Ecto provides a standardised API for talking to different databases. It is a Language Integrated Query or [LINQ](https://en.wikipedia.org/wiki/Language_Integrated_Query). 
+
+Here is an example an Ecto schema definition:
 
 ```elixir
-# In your config/config.exs file
-config :my_app, ecto_repos: [Sample.Repo]
-
-config :my_app, Sample.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  database: "ecto_simple",
-  username: "postgres",
-  password: "postgres"
-
-# In your application code
-defmodule Sample.Repo do
-  use Ecto.Repo,
-    otp_app: :my_app
-end
-
 defmodule Sample.Weather do
   use Ecto.Schema
 
@@ -31,27 +20,23 @@ defmodule Sample.Weather do
     field :prcp,    :float, default: 0.0
   end
 end
+```
 
-defmodule Sample.App do
-  import Ecto.Query
-  alias Sample.Weather
-  alias Sample.Repo
+Here are some examples of different style of queries for the above schema:
 
-  def keyword_query do
+```elixir
     query = from w in Weather,
          where: w.prcp > 0 or is_nil(w.prcp),
          select: w
     Repo.all(query)
-  end
+```
 
-  def pipe_query do
+```elixir
     Weather
     |> where(city: "Kraków")
     |> order_by(:temp_lo)
     |> limit(10)
     |> Repo.all
-  end
-end
 ```
 
 See the [online documentation](http://hexdocs.pm/ecto) or [run the sample application](https://github.com/elixir-ecto/ecto/tree/master/examples/simple) for more information.
